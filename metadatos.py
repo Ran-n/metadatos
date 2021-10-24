@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado:	18/10/2021 13:50:54
-#+ Editado:	2021/10/18 23:08:27.130963
+#+ Editado:	2021/10/24 16:17:21.506357
 # -----------------------------------------------------------------------------
 
 #* Reescrito do script "metadata" de 2019
@@ -67,8 +67,7 @@ def mostrar(fich, tipo_fich, prime_linha, vars_esteticas):
 
 def editar(fich, tipo_fich, prime_linha, vars_esteticas):
     simb_comen = prime_linha.split('!')[0]
-    contido = [ele.rstrip() for ele in uf.cargarFich(fich)]
-    #contido = uf.cargarFich(fich)
+    contido = uf.cargarFich(fich)
 
     agora = str(datetime.now()).replace('-', vars_esteticas['sep_datas'])
     agora = agora.replace(':', vars_esteticas['sep_horas'])
@@ -87,8 +86,7 @@ def editar(fich, tipo_fich, prime_linha, vars_esteticas):
 
 def crear(fich, tipo_fich, prime_linha, vars_esteticas):
     simb_comen  = prime_linha.split('!')[0]
-    contido = [ele.rstrip() for ele in uf.cargarFich(fich)]
-    #contido = uf.cargarFich(fich)
+    contido = uf.cargarFich(fich)
 
     agora = str(datetime.now()).replace('-', vars_esteticas['sep_datas'])
     agora = agora.replace(':', vars_esteticas['sep_horas'])
@@ -126,8 +124,7 @@ def crear(fich, tipo_fich, prime_linha, vars_esteticas):
 
 def suprimir(fich, tipo_fich, prime_linha, vars_esteticas):
     simb_comen = prime_linha.split('!')[0]
-    contido_ini = [ele.rstrip() for ele in uf.cargarFich(fich)]
-    #contido_ini = uf.cargarFich(fich)
+    contido_ini = uf.cargarFich(fich)
 
     contido = []
     for linha in contido_ini:
