@@ -154,8 +154,8 @@ def main():
         '.py':      '#! /usr/bin/env python3',
         '.sh':      '#! /bin/sh',
         '.bash':    '#! /bin/bash',
-        '.rs':      '//'
-        '.md':      '<!-- -->'
+        '.rs':      '//',
+        '.md':      '<!-- -->',
     }
 
     #
