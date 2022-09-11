@@ -155,6 +155,7 @@ def main():
         '.sh':      '#! /bin/sh',
         '.bash':    '#! /bin/bash',
         '.rs':      '//'
+        '.md':      '<!-- -->'
     }
 
     #
