@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado:	18/10/2021 13:50:54
-#+ Editado:	2021/10/24 16:17:21.506357
+#+ Editado:	2022/10/30 10:43:44.504345
 # -----------------------------------------------------------------------------
 
 #* Reescrito do script "metadata" de 2019
@@ -58,7 +58,7 @@ def ler_entrada():
 
 def mostrar(fich, tipo_fich, prime_linha, vars_esteticas):
     simb_comen = prime_linha.split('!')[0]
-    contido = [ele2 for ele2 in [ele.rstrip() for ele in uf.cargarFich(fich)] if ele2.startswith(simb_comen+vars_esteticas['indicador'], 0, 4)]
+    contido = [ele2 for ele2 in [ele.rstrip() for ele in uf.cargarFich(fich)] if ele2.startswith(simb_comen+vars_esteticas['indicador'], 0)]
 
     for linha in contido:
         print(linha)
@@ -77,7 +77,7 @@ def editar(fich, tipo_fich, prime_linha, vars_esteticas):
         agora = agora.split('.')[0]
 
     for index, linha in enumerate(contido):
-        if linha.startswith(simb_comen+vars_esteticas['indicador']+' Editado:', 0, 12):
+        if linha.startswith(simb_comen+vars_esteticas['indicador']+' Editado:', 0):
             contido[index] = simb_comen+vars_esteticas['indicador']+' Editado:\t'+agora
 
     uf.gardarFich(fich, contido)
@@ -96,7 +96,6 @@ def crear(fich, tipo_fich, prime_linha, vars_esteticas):
         agora = agora.split('.')[0]
 
     insertar = [
-        prime_linha,
         simb_comen+' '+vars_esteticas['coding_simb']+' coding: '+vars_esteticas['coding']+' '+vars_esteticas['coding_simb'],
         simb_comen+' -------------------------------------------------------------------------------'[:-len(simb_comen)],
         simb_comen+vars_esteticas['indicador']+' Autor:  \t'+vars_esteticas['autor'],
@@ -104,6 +103,9 @@ def crear(fich, tipo_fich, prime_linha, vars_esteticas):
         simb_comen+vars_esteticas['indicador']+' Editado:\t'+agora,
         simb_comen+' -------------------------------------------------------------------------------'[:-len(simb_comen)]+'\n'
     ]
+
+    # crear un campo en vars_esteticas en lugar de facer hardcode
+    if '!' in prime_linha: insertar.insert(0, prime_linha)
 
     # se o ficheiro non ten ningún contido
     if not contido:
@@ -128,7 +130,7 @@ def suprimir(fich, tipo_fich, prime_linha, vars_esteticas):
 
     contido = []
     for linha in contido_ini:
-        if not linha.startswith(simb_comen+vars_esteticas['indicador'], 0, 4):
+        if not linha.startswith(simb_comen+vars_esteticas['indicador'], 0):
             contido.append(linha)
 
     uf.gardarFich(fich, contido)
@@ -149,12 +151,14 @@ def executar(flag, fich, x_tipo_fich, vars_esteticas):
 # -----------------------------------------------------------------------------
 
 def main():
-    # Linha inicial para a execución do ficheiro, se non precisa ponher o simbolo de comentario
+    # Linha inicial para a execución do ficheiro.
+    # Se non, precisa ponher o simbolo de comentario.
     x_tipo_fich = {
         '.py':      '#! /usr/bin/env python3',
         '.sh':      '#! /bin/sh',
         '.bash':    '#! /bin/bash',
         '.rs':      '//',
+        '.md':      '[//]: #',
     }
 
     #
