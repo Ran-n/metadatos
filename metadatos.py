@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado:	18/10/2021 13:50:54
-#+ Editado:	2022/10/30 10:43:44.504345
+#+ Editado:	2022/10/30 12:44:23.300656
 # -----------------------------------------------------------------------------
 
 #* Reescrito do script "metadata" de 2019
@@ -56,7 +56,15 @@ def ler_entrada():
 
 # -----------------------------------------------------------------------------
 
+def trocear_prime_linha(prime_linha):
+    if type(prime_linha) == list:
+        return prime_linha[0], ' '+prime_linha[1]
+    return prime_linha, ''
+
+# -----------------------------------------------------------------------------
+
 def mostrar(fich, tipo_fich, prime_linha, vars_esteticas):
+    prime_linha, _ = trocear_prime_linha(prime_linha)
     simb_comen = prime_linha.split('!')[0]
     contido = [ele2 for ele2 in [ele.rstrip() for ele in uf.cargarFich(fich)] if ele2.startswith(simb_comen+vars_esteticas['indicador'], 0)]
 
@@ -66,6 +74,7 @@ def mostrar(fich, tipo_fich, prime_linha, vars_esteticas):
 # -----------------------------------------------------------------------------
 
 def editar(fich, tipo_fich, prime_linha, vars_esteticas):
+    prime_linha, simb_fin_comen = trocear_prime_linha(prime_linha)
     simb_comen = prime_linha.split('!')[0]
     contido = uf.cargarFich(fich)
 
@@ -78,13 +87,14 @@ def editar(fich, tipo_fich, prime_linha, vars_esteticas):
 
     for index, linha in enumerate(contido):
         if linha.startswith(simb_comen+vars_esteticas['indicador']+' Editado:', 0):
-            contido[index] = simb_comen+vars_esteticas['indicador']+' Editado:\t'+agora
+            contido[index] = simb_comen+vars_esteticas['indicador']+' Editado:\t'+agora+simb_fin_comen
 
     uf.gardarFich(fich, contido)
 
 # -----------------------------------------------------------------------------
 
 def crear(fich, tipo_fich, prime_linha, vars_esteticas):
+    prime_linha, simb_fin_comen = trocear_prime_linha(prime_linha)
     simb_comen  = prime_linha.split('!')[0]
     contido = uf.cargarFich(fich)
 
@@ -96,12 +106,13 @@ def crear(fich, tipo_fich, prime_linha, vars_esteticas):
         agora = agora.split('.')[0]
 
     insertar = [
-        simb_comen+' '+vars_esteticas['coding_simb']+' coding: '+vars_esteticas['coding']+' '+vars_esteticas['coding_simb'],
-        simb_comen+' -------------------------------------------------------------------------------'[:-len(simb_comen)],
-        simb_comen+vars_esteticas['indicador']+' Autor:  \t'+vars_esteticas['autor'],
-        simb_comen+vars_esteticas['indicador']+' Creado: \t'+agora,
-        simb_comen+vars_esteticas['indicador']+' Editado:\t'+agora,
-        simb_comen+' -------------------------------------------------------------------------------'[:-len(simb_comen)]+'\n'
+        simb_comen+' '+vars_esteticas['coding_simb']+' coding: '+vars_esteticas['coding']+' '+vars_esteticas['coding_simb']+simb_fin_comen,
+        simb_comen+' -------------------------------------------------------------------------------'[:-len(simb_comen)]+simb_fin_comen,
+        simb_comen+vars_esteticas['indicador']+' Autor:  \t'+vars_esteticas['autor']+simb_fin_comen,
+        simb_comen+vars_esteticas['indicador']+' Creado: \t'+agora+simb_fin_comen,
+        simb_comen+vars_esteticas['indicador']+' Editado:\t'+agora+simb_fin_comen,
+        simb_comen+' -------------------------------------------------------------------------------'[:-len(simb_comen)]+simb_fin_comen,
+        '',
     ]
 
     # crear un campo en vars_esteticas en lugar de facer hardcode
@@ -109,15 +120,13 @@ def crear(fich, tipo_fich, prime_linha, vars_esteticas):
 
     # se o ficheiro non ten ningún contido
     if not contido:
-        if len(prime_linha) < 4:
-            contido = insertar[1:].copy()
-        else:
             contido = insertar.copy()
     else:
-        if len(prime_linha) < 4:
-            insertar = insertar[1:]
         for index, insertable in enumerate(insertar):
-            if insertable[:5] != contido[index][:5]:
+            try:
+                if insertable != contido[index]:
+                    contido.insert(index, insertable)
+            except IndexError:
                 contido.insert(index, insertable)
 
     uf.gardarFich(fich, contido)
@@ -125,6 +134,7 @@ def crear(fich, tipo_fich, prime_linha, vars_esteticas):
 # -----------------------------------------------------------------------------
 
 def suprimir(fich, tipo_fich, prime_linha, vars_esteticas):
+    prime_linha, _ = trocear_prime_linha(prime_linha)
     simb_comen = prime_linha.split('!')[0]
     contido_ini = uf.cargarFich(fich)
 
@@ -146,7 +156,7 @@ def executar(flag, fich, x_tipo_fich, vars_esteticas):
     }
 
     tipo_fich = '.'+fich.split('.')[-1]
-    opcions[flag](fich, tipo_fich, x_tipo_fich.get(tipo_fich, '#!'), vars_esteticas)
+    opcions[flag](fich, tipo_fich, x_tipo_fich.get(tipo_fich, '#'), vars_esteticas)
 
 # -----------------------------------------------------------------------------
 
@@ -158,7 +168,7 @@ def main():
         '.sh':      '#! /bin/sh',
         '.bash':    '#! /bin/bash',
         '.rs':      '//',
-        '.md':      '[//]: #',
+        '.md':      ['[//]: #(', ')'],
     }
 
     #
