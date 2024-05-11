@@ -85,7 +85,7 @@ def load_file(
     """
 
     if not Path(fname).is_file():
-        raise Exception('O ficheiro {} non existe'.format(nome))
+        raise Exception(f'O ficheiro {fname} non existe')
 
     with open(fname, 'r', encoding=encoding) as f:
         if in_lines:
