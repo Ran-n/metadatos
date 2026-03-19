@@ -105,15 +105,6 @@ def read_input():
 # -----------------------------------------------------------------------------
 
 
-def split_first_line(first_line):
-    if isinstance(first_line, list):
-        return first_line[0], " " + first_line[1]
-    return first_line, ""
-
-
-# -----------------------------------------------------------------------------
-
-
 def format_now(style):
     """Returns the current datetime formatted according to style settings."""
     fmt = f"%Y{style['date_sep']}%m{style['date_sep']}%d %H{style['time_sep']}%M{style['time_sep']}%S"
@@ -125,7 +116,7 @@ def format_now(style):
 # -----------------------------------------------------------------------------
 
 
-def show(file, file_type, first_line, style):
+def show(file, file_type, ft, style):
     lines = load_file(file)
 
     if file_type == ".py":
@@ -139,17 +130,16 @@ def show(file, file_type, first_line, style):
             if in_docstring:
                 print(line.rstrip())
     else:
-        first_line, _ = split_first_line(first_line)
-        comment_sym = first_line.split("!")[0]
+        c = ft["comment"]
         for line in lines:
-            if line.rstrip().startswith(comment_sym + style["indicator"]):
+            if line.rstrip().startswith(c + style["indicator"]):
                 print(line.rstrip())
 
 
 # -----------------------------------------------------------------------------
 
 
-def edit(file, file_type, first_line, style):
+def edit(file, file_type, ft, style):
     content = load_file(file)
     now = format_now(style)
 
@@ -158,11 +148,11 @@ def edit(file, file_type, first_line, style):
             if line.startswith(style["label_revised"] + ":"):
                 content[index] = f"{style['label_revised']}: {now}"
     else:
-        first_line, end_comment_sym = split_first_line(first_line)
-        comment_sym = first_line.split("!")[0]
+        c = ft["comment"]
+        e = ft.get("end", "")
         for index, line in enumerate(content):
-            if line.startswith(comment_sym + style["indicator"] + f" {style['label_revised']}:"):
-                content[index] = f"{comment_sym}{style['indicator']} {style['label_revised']}: \t{now}{end_comment_sym}"
+            if line.startswith(c + style["indicator"] + f" {style['label_revised']}:"):
+                content[index] = f"{c}{style['indicator']} {style['label_revised']}: \t{now}{e}"
 
     save_file(file, content)
 
@@ -170,7 +160,7 @@ def edit(file, file_type, first_line, style):
 # -----------------------------------------------------------------------------
 
 
-def create(file, file_type, first_line, style):
+def create(file, file_type, ft, style):
     content = load_file(file)
     now = format_now(style)
 
@@ -185,11 +175,9 @@ def create(file, file_type, first_line, style):
             "",
         ]
     else:
-        first_line, end_comment_sym = split_first_line(first_line)
-        comment_sym = first_line.split("!")[0]
-        c = comment_sym
+        c = ft["comment"]
         i = style["indicator"]
-        e = end_comment_sym
+        e = ft.get("end", "")
         separator = f"{c} {'-' * (79 - len(c))}{e}"
         to_insert = [
             separator,
@@ -199,8 +187,8 @@ def create(file, file_type, first_line, style):
             separator,
             "",
         ]
-        if "!" in first_line:
-            to_insert.insert(0, first_line)
+        if ft.get("shebang"):
+            to_insert.insert(0, ft["shebang"])
 
     # Strip existing header of the same length before prepending, so re-running is idempotent.
     if content and len(content) >= len(to_insert) and content[: len(to_insert)] == to_insert:
@@ -214,7 +202,7 @@ def create(file, file_type, first_line, style):
 # -----------------------------------------------------------------------------
 
 
-def remove(file, file_type, first_line, style):
+def remove(file, file_type, ft, style):
     lines = load_file(file)
 
     if file_type == ".py":
@@ -230,9 +218,8 @@ def remove(file, file_type, first_line, style):
             if not in_docstring:
                 content.append(line)
     else:
-        first_line, _ = split_first_line(first_line)
-        comment_sym = first_line.split("!")[0]
-        content = [line for line in lines if not line.startswith(comment_sym + style["indicator"])]
+        c = ft["comment"]
+        content = [line for line in lines if not line.startswith(c + style["indicator"])]
 
     save_file(file, content)
 
@@ -240,25 +227,26 @@ def remove(file, file_type, first_line, style):
 # -----------------------------------------------------------------------------
 
 
+DEFAULT_FT = {"comment": "#"}
+
+
 def execute(flag, file, file_type_map, style):
     options = {"-v": show, "-m": edit, "-c": create, "-d": remove}
 
     file_type = "." + file.split(".")[-1]
-    options[flag](file, file_type, file_type_map.get(file_type, "#"), style)
+    options[flag](file, file_type, file_type_map.get(file_type, DEFAULT_FT), style)
 
 
 # -----------------------------------------------------------------------------
 
 
 def main():
-    # First line for the file — used to detect the comment symbol.
-    # Falls back to "#" for unknown file types.
     file_type_map = {
-        ".py": "#!/usr/bin/env python3",
-        ".sh": "#! /bin/sh",
-        ".bash": "#! /bin/bash",
-        ".rs": "//",
-        ".md": ["[//]: # (", ")"],
+        ".py": {"comment": None, "shebang": "#!/usr/bin/env python3"},
+        ".sh": {"comment": "#", "shebang": "#! /bin/sh"},
+        ".bash": {"comment": "#", "shebang": "#! /bin/bash"},
+        ".rs": {"comment": "//", "shebang": None},
+        ".md": {"comment": "[//]: # (", "shebang": None, "end": " )"},
     }
 
     style = {
